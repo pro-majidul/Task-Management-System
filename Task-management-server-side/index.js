@@ -77,6 +77,7 @@ async function run() {
     console.log("Connected to MongoDB Atlas!");
 
     const taskCollection = client.db("TaskManager").collection("tasks");
+    const userCollection = client.db("TaskManager").collection("users");
 
     // **API Routes for Tasks**
     
@@ -85,6 +86,18 @@ async function run() {
       const tasks = await taskCollection.find().toArray();
       res.json(tasks);
     });
+
+    //user related api
+    app.put('/users',async (req,res)=>{
+      const data = req.body;
+      const query = {email : data.email};
+      const updateDoc ={
+        $set:{ data, 'loginTime': new Date()}
+      }
+      const option = {upsert : true}
+      const result = await userCollection.updateOne(query,updateDoc, option)
+      res.send(result)
+    })
 
     // Add new task
     app.post("/tasks", async (req, res) => {
