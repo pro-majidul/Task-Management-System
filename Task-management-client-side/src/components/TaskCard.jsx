@@ -27,13 +27,13 @@ export default function TaskCard({ task, setEditTask, handleDeleteTask, setShowP
                         setEditTask(task); // Correctly setting the task
                         setShowPopup(true);
                     }}
-                    className="text-gray-600 hover:text-white cursor-pointer"
+                    className="text-white hover:text-green-500 cursor-pointer"
                 >
                     Update
                 </button>
                 <button
                     onClick={() => handleDeleteTask(task.category, task._id)}
-                    className="text-gray-600 hover:text-red-500 cursor-pointer"
+                    className="text-white hover:text-red-500 cursor-pointer"
                 >
                     Delete
                 </button>

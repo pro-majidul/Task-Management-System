@@ -93,21 +93,6 @@ export default function TaskBoard() {
             [destinationCategory]: [...tasks[destinationCategory], { ...movedTask, category: destinationCategory }],
         });
     };
-
-
-    // const handleAddTask = () => {
-    //     if (!newTask.title.trim() || error.title || error.description) return;
-    //     const newTaskObj = {
-    //         id: Date.now(),
-    //         title: newTask.title,
-    //         description: newTask.description,
-    //         timestamp: Date.now(),
-    //         category: selectedCategory,
-    //     };
-    //     setTasks({ ...tasks, [selectedCategory]: [...tasks[selectedCategory], newTaskObj] });
-    //     setNewTask({ title: "", description: "", category: "To-Do" });
-    //     setShowPopup(false);
-    // };
     const handleAddTask = async () => {
         if (!newTask.title.trim() || error.title || error.description) return;
         const newTaskObj = {
@@ -128,18 +113,6 @@ export default function TaskBoard() {
         setShowPopup(false);
     };
 
-
-    // const handleUpdateTask = () => {
-    //     if (!editTask || !editTask.title.trim() || error.title || error.description) return;
-    //     setTasks({
-    //         ...tasks,
-    //         [editTask.category]: tasks[editTask.category].map((task) =>
-    //             task.id === editTask.id ? editTask : task
-    //         ),
-    //     });
-    //     setEditTask(null);
-    //     setShowPopup(false);
-    // };
     const handleUpdateTask = async () => {
         if (!editTask || !editTask.title.trim() || error.title || error.description) return;
 
@@ -161,13 +134,6 @@ export default function TaskBoard() {
         setShowPopup(false);
     };
 
-
-    // const handleDeleteTask = (category, taskId) => {
-    //     setTasks({
-    //         ...tasks,
-    //         [category]: tasks[category].filter((task) => task.id !== taskId),
-    //     });
-    // };
     const handleDeleteTask = async (category, taskId) => {
         await fetch(`http://localhost:5000/tasks/${taskId}`, { method: "DELETE" });
 
