@@ -84,7 +84,7 @@ async function run() {
     // Get all tasks
     app.get("/tasks", async (req, res) => {
       const tasks = await taskCollection.find().toArray();
-      res.json(tasks);
+      res.send(tasks);
     });
 
     //user related api
@@ -92,7 +92,7 @@ async function run() {
       const data = req.body;
       const query = {email : data.email};
       const updateDoc ={
-        $set:{ data, 'loginTime': new Date()}
+        $set:{ ...data, 'loginTime': new Date()}
       }
       const option = {upsert : true}
       const result = await userCollection.updateOne(query,updateDoc, option)
@@ -104,25 +104,26 @@ async function run() {
       const newTask = req.body;
       newTask.timestamp = new Date();
       const result = await taskCollection.insertOne(newTask);
-      res.json(result);
+      res.send(result);
     });
 
     // Update task
-    app.put("/tasks/:id", async (req, res) => {
+    app.patch("/tasks/:id", async (req, res) => {
       const id = req.params.id;
-      const updatedTask = req.body;
-      const result = await taskCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedTask }
-      );
-      res.json(result);
+      const { _id ,...data} =  req.body
+      const query ={ _id: new ObjectId(id) }
+      const updatedTask = {
+        $set : data
+      }
+      const result = await taskCollection.updateOne( query , updatedTask);
+      res.send(result);
     });
 
     // Delete task
     app.delete("/tasks/:id", async (req, res) => {
       const id = req.params.id;
       const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
-      res.json(result);
+      res.send(result);
     });
 
     // Change task category (Drag & Drop)
@@ -133,7 +134,7 @@ async function run() {
         { _id: new ObjectId(id) },
         { $set: { category } }
       );
-      res.json(result);
+      res.send(result);
     });
 
   } catch (error) {
