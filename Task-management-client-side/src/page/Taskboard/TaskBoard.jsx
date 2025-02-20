@@ -4,15 +4,9 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-ki
 import TaskColumn from "../../components/TaskColumn";
 
 const initialTasks = {
-    "To-Do": [
-        { id: 1, title: "Sample Task 1", description: "Task description", timestamp: Date.now(), category: "To-Do" },
-    ],
-    "In Progress": [
-        { id: 2, title: "Sample Task 2", description: "Task description", timestamp: Date.now(), category: "In Progress" },
-    ],
-    "Done": [
-        { id: 3, title: "Sample Task 3", description: "Task description", timestamp: Date.now(), category: "Done" },
-    ],
+    "To-Do": [{ id: 1, title: "Sample Task 1", description: "Task description", timestamp: Date.now(), category: "To-Do" }],
+    "In Progress": [{ id: 2, title: "Sample Task 2", description: "Task description", timestamp: Date.now(), category: "In Progress" }],
+    "Done": [{ id: 3, title: "Sample Task 3", description: "Task description", timestamp: Date.now(), category: "Done" }],
 };
 
 export default function TaskBoard() {
@@ -21,6 +15,15 @@ export default function TaskBoard() {
     const [showPopup, setShowPopup] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("To-Do");
     const [editTask, setEditTask] = useState(null);
+    const [error, setError] = useState({ title: false, description: false });
+
+    const validateInput = (field, value) => {
+        if (field === "title") {
+            setError((prev) => ({ ...prev, title: value.length > 50 }));
+        } else if (field === "description") {
+            setError((prev) => ({ ...prev, description: value.length > 200 }));
+        }
+    };
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -52,7 +55,7 @@ export default function TaskBoard() {
     };
 
     const handleAddTask = () => {
-        if (!newTask.title.trim()) return;
+        if (!newTask.title.trim() || error.title || error.description) return;
         const newTaskObj = {
             id: Date.now(),
             title: newTask.title,
@@ -66,7 +69,7 @@ export default function TaskBoard() {
     };
 
     const handleUpdateTask = () => {
-        if (!editTask || !editTask.title.trim()) return;
+        if (!editTask || !editTask.title.trim() || error.title || error.description) return;
         setTasks({
             ...tasks,
             [editTask.category]: tasks[editTask.category].map((task) =>
@@ -87,7 +90,7 @@ export default function TaskBoard() {
     return (
         <section className="bg-gradient-to-r h-screen pt-10 from-purple-200 to-blue-200">
             <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-                <div className="flex flex-col md:flex-row gap-4 p-4 w-full max-w-7xl h-auto mx-auto">
+                <div className="md:flex gap-4 t p-4 w-full max-w-7xl h-auto mx-auto">
                     {Object.keys(tasks).map((category) => (
                         <SortableContext key={category} items={tasks[category]} strategy={verticalListSortingStrategy}>
                             <TaskColumn
@@ -114,30 +117,42 @@ export default function TaskBoard() {
                                     maxLength={50}
                                     value={editTask ? editTask.title : newTask.title}
                                     onChange={(e) => {
+                                        const value = e.target.value;
+                                        validateInput("title", value);
                                         if (editTask) {
-                                            setEditTask({ ...editTask, title: e.target.value });
+                                            setEditTask({ ...editTask, title: value });
                                         } else {
-                                            setNewTask({ ...newTask, title: e.target.value });
+                                            setNewTask({ ...newTask, title: value });
                                         }
                                     }}
-                                    className="border rounded text-gray-800 p-2 w-full mb-2"
+                                    className={`border rounded p-2 w-full mb-2 text-black ${error.title ? "border-red-500" : "border-gray-300"}`}
                                 />
+                                {error.title && <p className="text-red-500 text-sm">Title cannot exceed 50 characters</p>}
+
                                 <textarea
                                     placeholder="Description (max 200 chars)"
                                     maxLength={200}
                                     value={editTask ? editTask.description : newTask.description}
                                     onChange={(e) => {
+                                        const value = e.target.value;
+                                        validateInput("description", value);
                                         if (editTask) {
-                                            setEditTask({ ...editTask, description: e.target.value });
+                                            setEditTask({ ...editTask, description: value });
                                         } else {
-                                            setNewTask({ ...newTask, description: e.target.value });
+                                            setNewTask({ ...newTask, description: value });
                                         }
                                     }}
-                                    className="border rounded p-2 text-gray-800 w-full mb-2"
+                                    className={`border text-black rounded p-2 w-full mb-2 ${error.description ? "border-red-500" : "border-gray-300"}`}
                                 />
+                                {error.description && <p className="text-red-500 text-sm">Description cannot exceed 200 characters</p>}
+
                                 <div className="flex justify-end gap-2">
                                     <button onClick={() => { setShowPopup(false); setEditTask(null); }} className="bg-gray-400 text-white p-2 rounded">Cancel</button>
-                                    <button onClick={editTask ? handleUpdateTask : handleAddTask} className="bg-blue-500 text-white p-2 rounded">
+                                    <button 
+                                        onClick={editTask ? handleUpdateTask : handleAddTask} 
+                                        className={`p-2 rounded text-white ${error.title || error.description ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"}`}
+                                        disabled={error.title || error.description}
+                                    >
                                         {editTask ? "Update Task" : "Add Task"}
                                     </button>
                                 </div>

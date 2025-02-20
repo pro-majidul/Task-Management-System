@@ -16,11 +16,11 @@ export default function TaskCard({ task, setEditTask, handleDeleteTask, setShowP
         >
             {/* Draggable Area */}
             <div {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
-                <h3 className="font-semibold text-gray-500">{task.title}</h3>
+                <h3 className="font-semibold text-gray-500 break-words overflow-hidden whitespace-normal">{task.title}</h3>
             </div>
-            
-            <p className="text-sm text-gray-600">{task.description}</p>
-            
+
+            <div> <p className="text-sm text-gray-600 break-words overflow-hidden whitespace-normal">{task.description}</p></div>
+
             <div className="flex items-center justify-between my-2">
                 <button
                     onClick={() => {
