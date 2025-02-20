@@ -1,5 +1,19 @@
+import { useContext } from "react";
+import { AuthContext } from "../../provider/AuthProvider";
+import { Navigate, useNavigate } from "react-router-dom";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Login = () => {
+    const { user, setUer ,loading } = useContext(AuthContext)
+    const navigate =useNavigate()
+    if (user) {
+        return <Navigate to={'/'}></Navigate>
+    }
+    if(loading){
+        return <LoadingSpinner></LoadingSpinner>
+    }
+
+
     return (
         <section className="w-full flex items-center justify-center min-h-screen">
             <div className="w-full max-w-md p-4 rounded-md shadow sm:p-8 dark:bg-gray-50 dark:text-gray-800">
