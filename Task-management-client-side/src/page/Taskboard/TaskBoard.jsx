@@ -1,21 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DndContext, closestCorners } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import TaskColumn from "../../components/TaskColumn";
 
-const initialTasks = {
-    "To-Do": [{ id: 1, title: "Sample Task 1", description: "Task description", timestamp: Date.now(), category: "To-Do" }],
-    "In Progress": [{ id: 2, title: "Sample Task 2", description: "Task description", timestamp: Date.now(), category: "In Progress" }],
-    "Done": [{ id: 3, title: "Sample Task 3", description: "Task description", timestamp: Date.now(), category: "Done" }],
-};
+// const initialTasks = {
+//     "To-Do": [{ id: 1, title: "Sample Task 1", description: "Task description", timestamp: Date.now(), category: "To-Do" }],
+//     "In Progress": [{ id: 2, title: "Sample Task 2", description: "Task description", timestamp: Date.now(), category: "In Progress" }],
+//     "Done": [{ id: 3, title: "Sample Task 3", description: "Task description", timestamp: Date.now(), category: "Done" }],
+// };
 
 export default function TaskBoard() {
-    const [tasks, setTasks] = useState(initialTasks);
+    // const [tasks, setTasks] = useState(initialTasks);
     const [newTask, setNewTask] = useState({ title: "", description: "", category: "To-Do" });
     const [showPopup, setShowPopup] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("To-Do");
     const [editTask, setEditTask] = useState(null);
     const [error, setError] = useState({ title: false, description: false });
+
+    const [tasks, setTasks] = useState({});
+    useEffect(() => {
+        fetch("http://localhost:5000/tasks")
+            .then(res => res.json())
+            .then(data => {
+                const formattedTasks = { "To-Do": [], "In Progress": [], "Done": [] };
+                data.forEach(task => {
+                    formattedTasks[task.category].push(task);
+                });
+                setTasks(formattedTasks);
+            });
+    }, [tasks]);
+
 
     const validateInput = (field, value) => {
         if (field === "title") {
@@ -25,72 +39,149 @@ export default function TaskBoard() {
         }
     };
 
-    const handleDragEnd = (event) => {
+    // const handleDragEnd = (event) => {
+    //     const { active, over } = event;
+    //     if (!over) return;
+
+    //     const sourceCategory = Object.keys(tasks).find((category) =>
+    //         tasks[category].some((task) => task.id === active.id)
+    //     );
+    //     const destinationCategory = over.id;
+
+    //     if (!sourceCategory || !destinationCategory) return;
+
+    //     if (sourceCategory === destinationCategory) {
+    //         const updatedTasks = arrayMove(
+    //             tasks[sourceCategory],
+    //             tasks[sourceCategory].findIndex((task) => task.id === active.id),
+    //             tasks[destinationCategory].findIndex((task) => task.id === over.id)
+    //         );
+    //         setTasks({ ...tasks, [sourceCategory]: updatedTasks });
+    //     } else {
+    //         const movedTask = tasks[sourceCategory].find((task) => task.id === active.id);
+    //         movedTask.category = destinationCategory;
+    //         setTasks({
+    //             ...tasks,
+    //             [sourceCategory]: tasks[sourceCategory].filter((task) => task.id !== active.id),
+    //             [destinationCategory]: [...tasks[destinationCategory], movedTask],
+    //         });
+    //     }
+    // };
+
+    const handleDragEnd = async (event) => {
         const { active, over } = event;
         if (!over) return;
 
-        const sourceCategory = Object.keys(tasks).find((category) =>
-            tasks[category].some((task) => task.id === active.id)
+        const sourceCategory = Object.keys(tasks).find(category =>
+            tasks[category].some(task => task._id === active.id)
         );
         const destinationCategory = over.id;
 
-        if (!sourceCategory || !destinationCategory) return;
+        if (!sourceCategory || !destinationCategory || sourceCategory === destinationCategory) return;
 
-        if (sourceCategory === destinationCategory) {
-            const updatedTasks = arrayMove(
-                tasks[sourceCategory],
-                tasks[sourceCategory].findIndex((task) => task.id === active.id),
-                tasks[destinationCategory].findIndex((task) => task.id === over.id)
-            );
-            setTasks({ ...tasks, [sourceCategory]: updatedTasks });
-        } else {
-            const movedTask = tasks[sourceCategory].find((task) => task.id === active.id);
-            movedTask.category = destinationCategory;
-            setTasks({
-                ...tasks,
-                [sourceCategory]: tasks[sourceCategory].filter((task) => task.id !== active.id),
-                [destinationCategory]: [...tasks[destinationCategory], movedTask],
-            });
-        }
+        const movedTask = tasks[sourceCategory].find(task => task._id === active.id);
+
+        await fetch(`http://localhost:5000/tasks/${movedTask._id}/category`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category: destinationCategory }),
+        });
+
+        setTasks({
+            ...tasks,
+            [sourceCategory]: tasks[sourceCategory].filter(task => task._id !== active.id),
+            [destinationCategory]: [...tasks[destinationCategory], { ...movedTask, category: destinationCategory }],
+        });
     };
 
-    const handleAddTask = () => {
+
+    // const handleAddTask = () => {
+    //     if (!newTask.title.trim() || error.title || error.description) return;
+    //     const newTaskObj = {
+    //         id: Date.now(),
+    //         title: newTask.title,
+    //         description: newTask.description,
+    //         timestamp: Date.now(),
+    //         category: selectedCategory,
+    //     };
+    //     setTasks({ ...tasks, [selectedCategory]: [...tasks[selectedCategory], newTaskObj] });
+    //     setNewTask({ title: "", description: "", category: "To-Do" });
+    //     setShowPopup(false);
+    // };
+    const handleAddTask = async () => {
         if (!newTask.title.trim() || error.title || error.description) return;
         const newTaskObj = {
-            id: Date.now(),
             title: newTask.title,
             description: newTask.description,
-            timestamp: Date.now(),
             category: selectedCategory,
         };
-        setTasks({ ...tasks, [selectedCategory]: [...tasks[selectedCategory], newTaskObj] });
+
+        const res = await fetch("http://localhost:5000/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newTaskObj),
+        });
+
+        const data = await res.json();
+        setTasks({ ...tasks, [selectedCategory]: [...tasks[selectedCategory], data] });
         setNewTask({ title: "", description: "", category: "To-Do" });
         setShowPopup(false);
     };
 
-    const handleUpdateTask = () => {
+
+    // const handleUpdateTask = () => {
+    //     if (!editTask || !editTask.title.trim() || error.title || error.description) return;
+    //     setTasks({
+    //         ...tasks,
+    //         [editTask.category]: tasks[editTask.category].map((task) =>
+    //             task.id === editTask.id ? editTask : task
+    //         ),
+    //     });
+    //     setEditTask(null);
+    //     setShowPopup(false);
+    // };
+    const handleUpdateTask = async () => {
         if (!editTask || !editTask.title.trim() || error.title || error.description) return;
+
+        const res = await fetch(`http://localhost:5000/tasks/${editTask._id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(editTask),
+        });
+
+        const updatedTask = await res.json();
         setTasks({
             ...tasks,
             [editTask.category]: tasks[editTask.category].map((task) =>
-                task.id === editTask.id ? editTask : task
+                task._id === updatedTask._id ? updatedTask : task
             ),
         });
+
         setEditTask(null);
         setShowPopup(false);
     };
 
-    const handleDeleteTask = (category, taskId) => {
+
+    // const handleDeleteTask = (category, taskId) => {
+    //     setTasks({
+    //         ...tasks,
+    //         [category]: tasks[category].filter((task) => task.id !== taskId),
+    //     });
+    // };
+    const handleDeleteTask = async (category, taskId) => {
+        await fetch(`http://localhost:5000/tasks/${taskId}`, { method: "DELETE" });
+
         setTasks({
             ...tasks,
-            [category]: tasks[category].filter((task) => task.id !== taskId),
+            [category]: tasks[category].filter((task) => task._id !== taskId),
         });
     };
 
+
     return (
-        <section className="bg-gradient-to-r h-screen pt-10 from-purple-200 to-blue-200">
+        <section className="bg-gradient-to-r min-h-screen pt-10 from-purple-200 to-blue-200">
             <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-                <div className="md:flex gap-4 t p-4 w-full max-w-7xl h-auto mx-auto">
+                <div className="md:flex gap-4 space-y-2 p-4 w-full max-w-7xl h-auto mx-auto">
                     {Object.keys(tasks).map((category) => (
                         <SortableContext key={category} items={tasks[category]} strategy={verticalListSortingStrategy}>
                             <TaskColumn
@@ -148,8 +239,8 @@ export default function TaskBoard() {
 
                                 <div className="flex justify-end gap-2">
                                     <button onClick={() => { setShowPopup(false); setEditTask(null); }} className="bg-gray-400 text-white p-2 rounded">Cancel</button>
-                                    <button 
-                                        onClick={editTask ? handleUpdateTask : handleAddTask} 
+                                    <button
+                                        onClick={editTask ? handleUpdateTask : handleAddTask}
                                         className={`p-2 rounded text-white ${error.title || error.description ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"}`}
                                         disabled={error.title || error.description}
                                     >

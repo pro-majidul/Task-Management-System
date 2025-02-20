@@ -14,11 +14,34 @@ const Login = () => {
     }
     const handelGoogleLogin = () => {
         googleLogin()
-            .then(res => {
+            .then(async(res) => {
 
-                console.log(res.user)
+                // console.log(res.user)
+                const info = {
+                    userId: res?.user?.uid,
+                    email: res?.user?.email,
+                    name: res?.user?.displayName,
+                }
+                console.log(info)
                 setUser(res.user)
                 toast.success('User Login Successfull')
+                try {
+                    const response = await fetch("http://localhost:5000/users", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(info),
+                    });
+
+                    const result = await response.json();
+                    console.log("User stored in DB:", result);
+                } catch (error) {
+                    console.error("Error storing user:", error);
+                }
+            })
+            .catch((err) => {
+                console.error("Google login error:", err);
+                toast.error("Login Failed!");
+
             })
 
     }
