@@ -144,7 +144,7 @@ export default function TaskBoard() {
         if (!editTask || !editTask.title.trim() || error.title || error.description) return;
 
         const res = await fetch(`http://localhost:5000/tasks/${editTask._id}`, {
-            method: "PUT",
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(editTask),
         });
