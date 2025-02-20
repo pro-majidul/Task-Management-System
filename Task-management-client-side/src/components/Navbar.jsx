@@ -3,25 +3,15 @@ import { Link } from "react-router-dom";
 import { AuthContext } from "../provider/AuthProvider";
 
 const Navbar = () => {
-    const { logOutUser } = useContext(AuthContext)
+    const { logOutUser, user } = useContext(AuthContext)
 
     const handelLogOut = () => {
         logOutUser()
     }
     return (
-        <section>
-            <div className="navbar bg-base-100">
-                <div className="navbar-start">
-                    <Link to={'/'} className="btn btn-ghost text-xl">Task Management</Link>
-                </div>
-                <div className="navbar-center hidden lg:flex">
-                    <ul className="menu menu-horizontal px-1">
-                        <li><a>Item 1</a></li>
-                        <li><a>Item 3</a></li>
-                    </ul>
-                </div>
-                <div className="navbar-end">
-                    <button onClick={handelLogOut} className="btn">Log Out</button>
+        <section className="bg-gradient-to-r from-purple-200  to-blue-200 sticky top-0">
+            <div className="navbar w-full max-w-7xl md:px-10  mx-auto ">
+                <div className="navbar-start lg:w-1/2 w-full">
                     <div className="dropdown">
                         <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
                             <svg
@@ -40,10 +30,18 @@ const Navbar = () => {
                         <ul
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                            <li><a>Item 1</a></li>
-                            <li><a>Item 3</a></li>
+                            
+                            <li><button onClick={handelLogOut} className="hover:text-green-500 md:text-xl">Log Out</button></li>
                         </ul>
                     </div>
+                    <Link to={'/'} className="hover:text-green-500 text-lg   md:text-3xl">Task Management</Link>
+                </div>
+               
+                <div className="navbar-end gap-2">
+                    <div className="md:w-10 w-8 h-8 md:h-10 rounded-full border overflow-hidden">
+                        <img className="w-full" src={user.photoURL} referrerPolicy="no-referrer" alt="" />
+                    </div>
+                    <button onClick={handelLogOut} className="hover:text-green-500 md:text-xl hidden md:block">Log Out</button>
                 </div>
             </div>
         </section>
