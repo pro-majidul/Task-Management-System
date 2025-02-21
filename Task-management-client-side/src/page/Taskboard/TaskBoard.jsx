@@ -70,6 +70,7 @@ export default function TaskBoard() {
 
     const handleDragEnd = async (event) => {
         const { active, over } = event;
+        console.log(event)
         if (!over) return;
 
         const sourceCategory = Object.keys(tasks).find(category =>
@@ -148,8 +149,8 @@ export default function TaskBoard() {
         <section className="bg-gradient-to-r min-h-screen pt-10 from-purple-200 to-blue-200">
             <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
                 <div className="md:flex gap-4 space-y-2 p-4 w-full max-w-7xl h-auto mx-auto">
-                    {Object.keys(tasks).map((category) => (
-                        <SortableContext key={category} items={tasks[category]} strategy={verticalListSortingStrategy}>
+                    {/* {Object.keys(tasks).map((category) => (
+                        <SortableContext key={category} items={tasks[category].map(task => task._id)} strategy={verticalListSortingStrategy}>
                             <TaskColumn
                                 setSelectedCategory={setSelectedCategory}
                                 setShowPopup={setShowPopup}
@@ -160,7 +161,20 @@ export default function TaskBoard() {
                                 handleDeleteTask={handleDeleteTask}
                             />
                         </SortableContext>
+                    ))} */}
+                    {Object.keys(tasks).map((category) => (
+                        <TaskColumn
+                            key={category}
+                            setSelectedCategory={setSelectedCategory}
+                            setShowPopup={setShowPopup}
+                            title={category}
+                            category={category}
+                            tasks={tasks[category]}
+                            setEditTask={setEditTask}
+                            handleDeleteTask={handleDeleteTask}
+                        />
                     ))}
+
 
                     {showPopup && (
                         <div className="fixed inset-0 flex items-center justify-center bg-opacity-50">

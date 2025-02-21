@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 // eslint-disable-next-line react/prop-types
 export default function TaskCard({ task, setEditTask, handleDeleteTask, setShowPopup }) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task?.id });
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task?._id });
 
     return (
         <div
