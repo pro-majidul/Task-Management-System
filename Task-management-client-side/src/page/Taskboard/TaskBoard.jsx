@@ -2,13 +2,6 @@ import { useEffect, useState } from "react";
 import { DndContext, closestCorners } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import TaskColumn from "../../components/TaskColumn";
-
-// const initialTasks = {
-//     "To-Do": [{ id: 1, title: "Sample Task 1", description: "Task description", timestamp: Date.now(), category: "To-Do" }],
-//     "In Progress": [{ id: 2, title: "Sample Task 2", description: "Task description", timestamp: Date.now(), category: "In Progress" }],
-//     "Done": [{ id: 3, title: "Sample Task 3", description: "Task description", timestamp: Date.now(), category: "Done" }],
-// };
-
 export default function TaskBoard() {
     // const [tasks, setTasks] = useState(initialTasks);
     const [newTask, setNewTask] = useState({ title: "", description: "", category: "To-Do" });
@@ -39,61 +32,89 @@ export default function TaskBoard() {
         }
     };
 
-    // const handleDragEnd = (event) => {
+   
+
+    // const handleDragEnd = async (event) => {
     //     const { active, over } = event;
+    //     console.log(event)
     //     if (!over) return;
 
-    //     const sourceCategory = Object.keys(tasks).find((category) =>
-    //         tasks[category].some((task) => task.id === active.id)
+    //     const sourceCategory = Object.keys(tasks).find(category =>
+    //         tasks[category].some(task => task._id === active.id)
     //     );
     //     const destinationCategory = over.id;
 
-    //     if (!sourceCategory || !destinationCategory) return;
+    //     if (!sourceCategory || !destinationCategory || sourceCategory === destinationCategory) return;
 
-    //     if (sourceCategory === destinationCategory) {
-    //         const updatedTasks = arrayMove(
-    //             tasks[sourceCategory],
-    //             tasks[sourceCategory].findIndex((task) => task.id === active.id),
-    //             tasks[destinationCategory].findIndex((task) => task.id === over.id)
-    //         );
-    //         setTasks({ ...tasks, [sourceCategory]: updatedTasks });
-    //     } else {
-    //         const movedTask = tasks[sourceCategory].find((task) => task.id === active.id);
-    //         movedTask.category = destinationCategory;
-    //         setTasks({
-    //             ...tasks,
-    //             [sourceCategory]: tasks[sourceCategory].filter((task) => task.id !== active.id),
-    //             [destinationCategory]: [...tasks[destinationCategory], movedTask],
-    //         });
-    //     }
+    //     const movedTask = tasks[sourceCategory].find(task => task._id === active.id);
+
+    //     await fetch(`http://localhost:5000/tasks/${movedTask._id}/category`, {
+    //         method: "PUT",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ category: destinationCategory }),
+    //     });
+
+    //     setTasks({
+    //         ...tasks,
+    //         [sourceCategory]: tasks[sourceCategory].filter(task => task._id !== active.id),
+    //         [destinationCategory]: [...tasks[destinationCategory], { ...movedTask, category: destinationCategory }],
+    //     });
     // };
 
     const handleDragEnd = async (event) => {
         const { active, over } = event;
-        console.log(event)
+    
+        // Ensure there is a valid drop target
         if (!over) return;
-
-        const sourceCategory = Object.keys(tasks).find(category =>
-            tasks[category].some(task => task._id === active.id)
+    
+        const sourceCategory = Object.keys(tasks).find((category) =>
+            tasks[category].some((task) => task._id === active.id)
         );
         const destinationCategory = over.id;
-
-        if (!sourceCategory || !destinationCategory || sourceCategory === destinationCategory) return;
-
-        const movedTask = tasks[sourceCategory].find(task => task._id === active.id);
-
-        await fetch(`http://localhost:5000/tasks/${movedTask._id}/category`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category: destinationCategory }),
-        });
-
-        setTasks({
-            ...tasks,
-            [sourceCategory]: tasks[sourceCategory].filter(task => task._id !== active.id),
-            [destinationCategory]: [...tasks[destinationCategory], { ...movedTask, category: destinationCategory }],
-        });
+    
+        if (!sourceCategory || !destinationCategory) return;
+    
+        // If the task is dropped in the same category, just reorder
+        if (sourceCategory === destinationCategory) {
+            const updatedTasks = arrayMove(
+                tasks[sourceCategory], 
+                tasks[sourceCategory].findIndex((task) => task._id === active.id),
+                tasks[sourceCategory].findIndex((task) => task._id === over.id)
+            );
+    
+            setTasks({
+                ...tasks,
+                [sourceCategory]: updatedTasks
+            });
+    
+            // Update the server for reordering tasks (if necessary)
+            await fetch(`http://localhost:5000/tasks/${active.id}/reorder`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    newOrder: updatedTasks.map(task => task._id)
+                })
+            });
+    
+        } else {
+            // If task moved to another category, update the category and reorder
+            const movedTask = tasks[sourceCategory].find(task => task._id === active.id);
+            
+            await fetch(`http://localhost:5000/tasks/${movedTask._id}/category`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category: destinationCategory })
+            });
+    
+            // Update UI
+            setTasks({
+                ...tasks,
+                [sourceCategory]: tasks[sourceCategory].filter(task => task._id !== active.id),
+                [destinationCategory]: [...tasks[destinationCategory], { ...movedTask, category: destinationCategory }]
+            });
+        }
     };
+    
     const handleAddTask = async () => {
         if (!newTask.title.trim() || error.title || error.description) return;
         const newTaskObj = {
