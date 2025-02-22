@@ -4,7 +4,7 @@
 This is a **Task Management Application** where users can add, edit, delete, and reorder tasks using a **drag-and-drop** interface. Tasks are categorized into three sections: **To-Do, In Progress, and Done**. Changes are saved instantly in the database for persistence.
 
 ## 🌟 Live Demo
-🔗 [Live Application](#) (Deploy the app and add the link here)
+🔗 [Live Application](https://task-management-2e04f.web.app) 
 <!-- 🔗 [Backend API](#) (Deploy the backend and add the link here) -->
 
 ## 📌 Features
