@@ -70,6 +70,38 @@ VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
 VITE_FIREBASE_PROJECT_ID=your_project_id
 ```
 
+## 📦 Dependencies
+### **Frontend:**
+```json
+{
+  "dependencies": {
+    "axios": "^1.4.0",
+    "firebase": "^10.7.1",
+    "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.1",
+    "tailwindcss": "^3.3.5",
+    "daisyui": "^3.5.0"
+  }
+}
+```
+
+### **Backend:**
+```json
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "socket.io": "^4.7.2",
+    "firebase-admin": "^11.10.1"
+  }
+}
+```
+
+
 ## 🔥 API Endpoints
 | Method | Endpoint        | Description                  |
 |--------|----------------|------------------------------|
@@ -91,4 +123,5 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 
 ## 🙌 Contribution
 Feel free to contribute! Fork the repo, make your changes, and submit a pull request.
+
 
