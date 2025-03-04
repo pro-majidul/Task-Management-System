@@ -12,7 +12,7 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(cors({
   origin :[
-    "http://localhost:5173"
+    "http://localhost:5173",'https://task-management-2e04f.web.app'
   ]
 }));
 
@@ -30,7 +30,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("Connected to MongoDB Atlas!");
 
     const taskCollection = client.db("TaskManager").collection("tasks");

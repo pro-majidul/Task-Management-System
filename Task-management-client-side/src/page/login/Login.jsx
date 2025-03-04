@@ -26,7 +26,7 @@ const Login = () => {
                 setUser(res.user)
                 toast.success('User Login Successfull')
                 try {
-                    const response = await fetch("http://localhost:5000/users", {
+                    const response = await fetch("https://task-management-server-side-kappa.vercel.app/users", {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(info),

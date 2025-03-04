@@ -12,7 +12,7 @@ export default function TaskBoard() {
 
     const [tasks, setTasks] = useState({});
     useEffect(() => {
-        fetch("http://localhost:5000/tasks")
+        fetch("https://task-management-server-side-kappa.vercel.app/tasks")
             .then(res => res.json())
             .then(data => {
                 const formattedTasks = { "To-Do": [], "In Progress": [], "Done": [] };
@@ -32,7 +32,7 @@ export default function TaskBoard() {
         }
     };
 
-   
+
 
     // const handleDragEnd = async (event) => {
     //     const { active, over } = event;
@@ -48,7 +48,7 @@ export default function TaskBoard() {
 
     //     const movedTask = tasks[sourceCategory].find(task => task._id === active.id);
 
-    //     await fetch(`http://localhost:5000/tasks/${movedTask._id}/category`, {
+    //     await fetch(`https://task-management-server-side-kappa.vercel.app/tasks/${movedTask._id}/category`, {
     //         method: "PUT",
     //         headers: { "Content-Type": "application/json" },
     //         body: JSON.stringify({ category: destinationCategory }),
@@ -63,49 +63,49 @@ export default function TaskBoard() {
 
     const handleDragEnd = async (event) => {
         const { active, over } = event;
-    
+
         // Ensure there is a valid drop target
         if (!over) return;
-    
+
         const sourceCategory = Object.keys(tasks).find((category) =>
             tasks[category].some((task) => task._id === active.id)
         );
         const destinationCategory = over.id;
-    
+
         if (!sourceCategory || !destinationCategory) return;
-    
+
         // If the task is dropped in the same category, just reorder
         if (sourceCategory === destinationCategory) {
             const updatedTasks = arrayMove(
-                tasks[sourceCategory], 
+                tasks[sourceCategory],
                 tasks[sourceCategory].findIndex((task) => task._id === active.id),
                 tasks[sourceCategory].findIndex((task) => task._id === over.id)
             );
-    
+
             setTasks({
                 ...tasks,
                 [sourceCategory]: updatedTasks
             });
-    
+
             // Update the server for reordering tasks (if necessary)
-            await fetch(`http://localhost:5000/tasks/${active.id}/reorder`, {
+            await fetch(`https://task-management-server-side-kappa.vercel.app/tasks/${active.id}/reorder`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     newOrder: updatedTasks.map(task => task._id)
                 })
             });
-    
+
         } else {
             // If task moved to another category, update the category and reorder
             const movedTask = tasks[sourceCategory].find(task => task._id === active.id);
-            
-            await fetch(`http://localhost:5000/tasks/${movedTask._id}/category`, {
+
+            await fetch(`https://task-management-server-side-kappa.vercel.app/tasks/${movedTask._id}/category`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ category: destinationCategory })
             });
-    
+
             // Update UI
             setTasks({
                 ...tasks,
@@ -114,7 +114,26 @@ export default function TaskBoard() {
             });
         }
     };
-    
+
+    // const handleAddTask = async () => {
+    //     if (!newTask.title.trim() || error.title || error.description) return;
+    //     const newTaskObj = {
+    //         title: newTask.title,
+    //         description: newTask.description,
+    //         category: selectedCategory,
+    //     };
+
+    //     const res = await fetch("https://task-management-server-side-kappa.vercel.app/tasks", {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify(newTaskObj),
+    //     });
+
+    //     const data = await res.json();
+    //     setTasks({ ...tasks, [selectedCategory]: [...tasks[selectedCategory], data] });
+    //     setNewTask({ title: "", description: "", category: "To-Do" });
+    //     setShowPopup(false);
+    // };
     const handleAddTask = async () => {
         if (!newTask.title.trim() || error.title || error.description) return;
         const newTaskObj = {
@@ -123,41 +142,92 @@ export default function TaskBoard() {
             category: selectedCategory,
         };
 
-        const res = await fetch("http://localhost:5000/tasks", {
+        const res = await fetch("https://task-management-server-side-kappa.vercel.app/tasks", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newTaskObj),
         });
 
         const data = await res.json();
-        setTasks({ ...tasks, [selectedCategory]: [...tasks[selectedCategory], data] });
+
+        // After adding the task, fetch the latest tasks to ensure synchronization
+        const fetchData = await fetch("https://task-management-server-side-kappa.vercel.app/tasks");
+        const fetchedTasks = await fetchData.json();
+        const formattedTasks = { "To-Do": [], "In Progress": [], "Done": [] };
+        fetchedTasks.forEach(task => {
+            formattedTasks[task.category].push(task);
+        });
+        setTasks(formattedTasks);
+
         setNewTask({ title: "", description: "", category: "To-Do" });
         setShowPopup(false);
     };
 
+    // const handleUpdateTask = async () => {
+    //     if (!editTask || !editTask.title.trim() || error.title || error.description) return;
+
+    //     const res = await fetch(`https://task-management-server-side-kappa.vercel.app/tasks/${editTask._id}`, {
+    //         method: "PATCH",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify(editTask),
+    //     });
+
+    //     const updatedTask = await res.json();
+    //     setTasks({
+    //         ...tasks,
+    //         [editTask.category]: tasks[editTask.category].map((task) =>
+    //             task._id === updatedTask._id ? updatedTask : task
+    //         ),
+    //     });
+
+    //     setEditTask(null);
+    //     setShowPopup(false);
+    // };
+
     const handleUpdateTask = async () => {
         if (!editTask || !editTask.title.trim() || error.title || error.description) return;
 
-        const res = await fetch(`http://localhost:5000/tasks/${editTask._id}`, {
+        const res = await fetch(`https://task-management-server-side-kappa.vercel.app/tasks/${editTask._id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(editTask),
         });
 
         const updatedTask = await res.json();
-        setTasks({
-            ...tasks,
-            [editTask.category]: tasks[editTask.category].map((task) =>
+
+        // Update the task in the state locally to reflect changes immediately
+        setTasks(prevTasks => {
+            // Check if the category exists
+            if (!prevTasks[updatedTask.category]) {
+                return prevTasks;
+            }
+
+            const updatedCategoryTasks = prevTasks[updatedTask.category].map(task =>
                 task._id === updatedTask._id ? updatedTask : task
-            ),
+            );
+
+            // Force a re-render by updating the state with new reference
+            return {
+                ...prevTasks,
+                [updatedTask.category]: updatedCategoryTasks,
+            };
         });
 
         setEditTask(null);
         setShowPopup(false);
+
+        // Forcing a re-render after the update
+        setTimeout(() => {
+            // This timeout ensures React can pick up the state change and re-render
+            setTasks({ ...tasks });
+        }, 0);
     };
 
+
+
+
     const handleDeleteTask = async (category, taskId) => {
-        await fetch(`http://localhost:5000/tasks/${taskId}`, { method: "DELETE" });
+        await fetch(`https://task-management-server-side-kappa.vercel.app/tasks/${taskId}`, { method: "DELETE" });
 
         setTasks({
             ...tasks,
